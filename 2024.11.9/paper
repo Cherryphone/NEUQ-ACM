@@ -105,3 +105,45 @@ int main()
     printf("%lld", D(n));
     return 0;
 }
+
+
+/*洛谷P1029
+本题所要的p，q均满足以x为最大公约数，以y为最小公倍数.那么根据数论的知识，xy=pq
+则只需依次将x到y的数赋值给p，如果p|xy，那么取这个p对应的q，而如果再满足gcd(p,q)==x，那么计数+1
+本人由于过菜只能想到暴力解法
+以下为源代码*/
+#include<bits/stdc++.h>
+using namespace std;
+int gcd(int a, int b)
+{
+    int maxi = max(a, b);
+    int mini = min(a, b);
+    while (maxi % mini != 0)
+    {
+        int temp = mini;
+        mini = maxi % mini;
+        maxi = temp;
+    }
+    return mini;
+}
+void P1029()
+{
+    int x, y,count=0;
+    long long p,q;
+    scanf("%d%d",&x,&y);
+    for (int i = x; i <= y; i++)
+    {
+        p = i;
+        if ((x * y % p) == 0)
+        {
+            q = x*y/p;
+            if (gcd(p, q) == x) count++;
+        }
+    }
+    printf("%d",count);
+}
+int main()
+{
+    P1029();
+    return 0;
+}
