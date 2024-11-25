@@ -125,3 +125,74 @@ void numbertower()
 		}
 	}
 }
+
+
+
+
+
+//杭电P1421搬寝室
+/*本题是稍微进阶的dp题目
+关键在于求出所有的情况下的最优解，这里指的所有情况指的是
+每一个需要搬得物品总数n下所要求搬的趟数k下的最优解，记为dp[k][n]
+首先要对输入数据进行排序，把储存原始数据的数组记为a[n]
+还有重要的一点是意识到每前偶数n个物品搬最大趟数n/2的最优解是 ，按顺序两个两个取
+根据以上法则先把dp初始化为0，再将其所有dp[n/2][n]循环按照以上的法则初始化
+最后循环重要递推公式dp[i][j]=min(dp[i][j-1],dp[i-1][j-2]+(a[j]-a[j-1])*(a[j]-a[j-1]))
+把所有最优解依次存入即可
+*/
+#include<bits/stdc++.h>
+#define N 2005
+using namespace std;
+int a[N];
+int dp[N][N]={0};
+int n,k;
+int main()
+{
+	while(scanf("%d%d",&n,&k)!=EOF)               //杭电oj没说明输入几组的情况下会默认一直输入,前几次submit栽在了这里
+	{
+		for(int i=1;i<=n;i++)
+			scanf("%d",&a[i]);
+		sort(a+1,a+1+n);
+		for(int i=1;i<=k;i++)                                 //初始化dp[n/2][n]位置
+			dp[i][i*2]=dp[i-1][i*2-2]+(a[2*i]-a[2*i-1])*(a[2*i]-a[2*i-1]);	
+		for(int i=1;i<=k;i++)                                   //开始递推
+			for(int j=2*i+1;j<=n;j++)
+				dp[i][j]=min(dp[i][j-1],dp[i-1][j-2]+(a[j]-a[j-1])*(a[j]-a[j-1]));
+		printf("%d",dp[k][n]); 
+	}
+	return 0;
+}
+
+
+
+
+//洛谷P1359
+/*一道dp寻找最优解的问题
+为了方便理解，可以在草稿纸上画出一个不规则的上三角矩阵（其主对角线元素为0）用于储存初始数据
+定义dp数组，来储存每一个对应港口数量所能得到的最优解，根据数据范围，我们将其初始化为10000000，
+特别的为了做题，我们将dp[1]定义为0
+这道题的核心在于，dp[n]与dp[n-1]的关系，我们根据题意可以得知，我们必须要遍历n情况下所有可能的到达n的一步路
+1~n，2~n，3~n   ....  n-1~n即a[1][n],a[2][n],a[3][n],.......a[n-1][n]的值，并且将这数据分别dp[1]，dp[2], dp[3].....dp[n-1]相加，选出这些结果中的最小值这样才能得到dp[n]，具体实现需要使用到两层循环.
+代码如下*/
+#include<bits/stdc++.h>
+#define N 205
+using namespace std;
+int a[N][N];
+int dp[N];
+int n;
+int main()
+{
+	scanf("%d",&n);
+	for(int i=3;i<=n;i++)
+		dp[i]=10000000;
+	for(int i=1;i<n;i++)
+		for(int j=i+1;j<=n;j++)
+			scanf("%d",&a[i][j]);
+	dp[1]=0;
+	dp[2]=a[1][2];
+	for(int i=3;i<=n;i++)            //本题核心的具体实现
+		for(int j=1;j<i;j++)
+			dp[i]=min(dp[j]+a[j][i],dp[i]);
+	printf("%d",dp[n]);
+	return 0;
+}
