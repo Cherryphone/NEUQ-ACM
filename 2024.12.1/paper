@@ -1,0 +1,360 @@
+//洛谷P1002
+/*本题为dp，其递推公式比较好想，即为dp[a][b]=dp[a-1][b]+dp[a][b-1]
+但是要特别注意有马的存在，而且马所占领的点位可能越界，为了防止越界
+我选择把所有点的坐标+2处理，把dp[2][2]当成起点，初始化为1；对于界外点均初始化为0；
+马占领的点初始化为0；其他点初始化为1；
+注意点：防止爆int，此题需要开long long
+为了防止循环时把dp[2][2]赋值为0；选择在循环体中加一条dp[2][2]=1；
+代码如下*/
+#include<bits/stdc++.h>
+#define N 25
+#define int long long
+using namespace std;
+int dp[N][N];
+int x,y,n,m;
+signed main()
+{
+	scanf("%lld%lld%lld%lld",&n,&m,&x,&y);
+	for(int i=0;i<N;i++)          
+		for(int j=0;j<N;j++)
+			dp[i][j]=-1;
+	for(int i=0;i<2;i++)
+		for(int j=0;j<N;j++)
+			dp[i][j]=0;
+	for(int i=0;i<N;i++)
+		for(int j=0;j<2;j++)
+			dp[i][j]=0;
+	dp[2][2]=1;
+	dp[x+2][y+2]=0;
+	dp[x+2-1][y+2-2]=0;
+	dp[x+2-1][y+2+2]=0;
+	dp[x+2-2][y+2-1]=0;
+	dp[x+2-2][y+2+1]=0;
+	dp[x+2+1][y+2+2]=0;
+	dp[x+2+1][y+2-2]=0;
+	dp[x+2+2][y+2+1]=0;
+	dp[x+2+2][y+2-1]=0;
+//以上均为初始化代码，以下开始进行递推。
+
+	for(int i=2;i<=n+2;i++)
+		for(int j=2;j<=m+2;j++)
+			if(dp[i][j]!=0)
+			{
+				dp[i][j]=dp[i-1][j]+dp[i][j-1];
+				dp[2][2]=1;
+			}
+	printf("%lld",dp[n+2][m+2]);       //时刻注意坐标要+2
+}
+
+
+
+//洛谷P1028
+/*根据题意，本题本质上是符合条件的数组的拼接，我们以n，n/2，n/2-1......2,1为结束位置；
+构建arr[k]数组，其中arr[k]表示以k为结尾数字的合法数列个数,，假设输入数据为n,初始化arr[k]=0；arr[n]=1;
+根据推算发现，arr[k]=arr[n]+arr[n/2]+arr[n/2-1]+....+arr[2*k+1]+arr[2*k]
+进行递推计算，最后数组中所有元素求和即可
+以下为代码*/
+#include<bits/stdc++.h>
+using namespace std;
+int n,arr[1005]={0},sum=0;
+int main()
+{
+	scanf("%d",&n);
+	arr[n]=1;
+	for(int i=n/2;i>=1;i--)
+		for(int j=n;j>=i*2;j--)
+			arr[i]+=arr[j];
+	for(int i=1;i<=n;i++)
+		sum+=arr[i];
+	printf("%d",sum);	
+}
+
+
+
+//杭电P2602
+/*本题是01背包题目,特点是每个物品只有放和不放2种状态
+原始做法是创建二维dp数组，但是可以通过一维dp数组进行内存优化；
+本题的关键是01背包的经典递推公式dp[i][j]=max(dp[i-1][j],dp[i-1][j-vol[i]]+val[i])；
+如果选择前i个物品，可用v空间的最优解，第i个物品只有选中和不选中两种可能；
+假如第i个物品不考虑，那么v空间下的价值最优解相当于前i-1个物品的价值最优解
+如果第i个物品考虑放入，那么空间提前被占用了vol[i]，价值提前加上了val[i]，那么只要考虑
+前i-1个物品在可使用空间为j-vol[i]条件下的最优解；选取这两个最优解的最大值就是dp[i][j]的最优解
+注意使用二维数组时，需要判断j-vol[i]是否小于0，一旦是小于0了，那么肯定不考虑放入第i个物品的情况
+此时的最优解直接就是dp[i-1][j];有效保障每个情况都进入循环体
+如果使用一维dp维护最优解，那么就不用担心，因为一维dp保留了前一次有效的数据
+还要注意一维dp需要从后往前遍历
+代码如下*/
+//二维做法
+#include<bits/stdc++.h>
+#define MAX 1005
+using namespace std;
+int t,n,v,dp[MAX][MAX]={0},val[MAX],vol[MAX];
+int main()
+{
+	scanf("%d",&t);
+	while(t--)
+	{
+		scanf("%d%d",&n,&v);
+		for(int i=1;i<=n;i++)
+			scanf("%d",&val[i]);
+		for(int i=1;i<=n;i++)
+			scanf("%d",&vol[i]);
+		for(int i=1;i<=n;i++)
+			for(int j=0;j<=v;j++)
+			{
+				if(j-vol[i]<0)dp[i][j]=dp[i-1][j];
+				else dp[i][j]=max(dp[i-1][j],dp[i-1][j-vol[i]]+val[i]);
+			}
+
+		printf("%d\n",dp[n][v]);
+	}
+	return 0;
+}
+//一维做法
+#include<bits/stdc++.h>
+#define MAX 1005
+using namespace std;
+int t,n,v,dp[MAX],val[MAX],vol[MAX];
+int main()
+{
+	scanf("%d",&t);
+	while(t--)
+	{
+		int dp[MAX]={0};           //注意多测一定要清空！！血与泪的教训
+		scanf("%d%d",&n,&v);
+		for(int i=1;i<=n;i++)
+			scanf("%d",&val[i]);
+		for(int i=1;i<=n;i++)
+			scanf("%d",&vol[i]);
+		for(int i=1;i<=n;i++)
+			for(int j=v;j>=vol[i];j--)
+				dp[j]=max(dp[j],dp[j-vol[i]]+val[i]);
+		printf("%d\n",dp[v]);
+	}
+	return 0;
+}
+
+
+
+
+/*完全背包，特点是一种物品可以取无数个，体积有限
+其实可以转化为01背包，某个物品最多可以放入的个数相当于volume/v；
+volume为总体积，v为单个某个物品的体积
+但是更好的优化是直接把01背包一维dp的j下标改成从vol[i]到v遍历
+因为这样我们可以把前面已算出的最优解在一次循环中重复计算，也就是说某个物品可能会被重复选择
+代码修改如下*/
+for(int i=1;i<=n;i++)
+	for(int j=vol[i];j<=v;j--)
+		dp[j]=max(dp[j],dp[j-vol[i]]+val[i]);
+//这样就马上转变为了完全背包
+
+
+/*如果要强制背包全部装满，那么我们把非法点标记为-1即可，此处初始化要特别注意，其他代码都不变
+前0个物品要装满容量为0的背包，dp[0]=0是合法的，其他点都是非法的，因为0个物品怎么也装不满有容量的背包
+*/
+#include<bits/stdc++.h>
+#define MAX 1005
+using namespace std;
+int t,n,v,dp[MAX],val[MAX],vol[MAX];
+int main()
+{
+	scanf("%d",&t);
+	while(t--)
+	{
+		memset(dp,-1,sizeof(dp));        //唯一区别在这里
+		dp[0]=0;
+		scanf("%d%d",&n,&v);
+		for(int i=1;i<=n;i++)
+			scanf("%d",&val[i]);
+		for(int i=1;i<=n;i++)
+			scanf("%d",&vol[i]);
+		for(int i=1;i<=n;i++)
+			for(int j=v;j>=vol[i];j--)      //看遍历顺序说明这是装满背包的01背包
+				dp[j]=max(dp[j],dp[j-vol[i]]+val[i]);
+		printf("%d\n",dp[v]);
+	}
+	return 0;
+}
+
+
+/*多重背包，特点是背包体积不变，但是某些物品可以取一个固定的个数C个
+C不为1但是C为自然数，我们也可以使用朴素的转换方法，默认他为01背包，但是很遗憾可能会爆时间或者内存
+这里我们需要使用一种更好的优化方法，就是运用二进制，进行物品拆分，转化为01背包
+把某种物品打包为2进制，比如有10个某个物品，那么可以把它打包为1个一组价值val体积vol
+2个一组价值2val体积2vol，4个一组价值4val体积4vol，10-1-2-4个一组价值3val体积3vol，这样打包成4个物品
+再转化为01背包。这是因为任何数字都可以表示为2^k的和（其中k是自然数），也就是相当于把物品数二进制拆分了
+实现如下*/
+int t=1,cnt=1;   //创建计数器cnt以及指标t=2^0
+while(x>=t)       //x就是物品数量
+{
+	val[cnt]=a*t;      //a是这个物品的原始价值
+	vol[cnt]=b*t;     //b是这个物品的原始体积
+	cnt++;                //计数器加1；说明我要创建下一个新物品了
+	x-=t;		    //减掉已经用于创建的个数
+	t<<=1;               //这一步等价于t*=2;
+}
+if(x)                             //假如剩下的不能再凑成2^k了，直接把剩下物品创建成一个新物品
+{
+	val[cnt]=a*x;
+	vol[cnt]=b*x;
+	cnt++;
+}
+
+
+
+
+/*二维费用背包问题，其实就是限制条件除了体积以外还有一个其他的，比如承重
+一般化来讲就是限制条件多了一条，这时我们可以考虑使用三维dp数组
+dp[i][j][k],表示选择前i个物品，最大容量为j，最大承重为k的条件下价值的最大值，
+一样的，只要考虑第i个物品是否在背包里面即可，我们可以很容易的想到要进行一个三重循环
+状态转移方程为dp[i][j][k]=max(dp[i-1][j][k],dp[i-1][j-vol[i]][k-wei[i]]+val[i])
+掌握了这个，也可以套用前面多重背包，完全背包的方法
+*/
+#include <iostream>
+using namespace std;
+
+const int N=150;
+const int P=5000;
+
+int pg[N+1]; //pg支付费用
+int rune[N+1]; //rune支付费用
+int dp[P+1][P+1];  //dp[i][j]=k 表示花费pg为i rune为j时的最大价值为k
+int s[N+1]; // 件数
+int v[N+1]; //能力值
+
+
+int max(int a,int b)
+{
+    return a>b?a:b;
+}
+
+void ZeroOnePack(int dp[][P+1],int weight_1,int weight_2,int total_1,int total_2,int value)
+{
+    int j,i;
+    for(i=total_1;i>=weight_1;i--)
+    {
+        for(j=total_2;j>=weight_2;j--)
+        {
+            dp[i][j]=max(dp[i][j],dp[i-weight_1][j-weight_2]+value);
+        }
+    }
+}
+
+
+void completePack(int dp[][P+1],int weight_1,int weight_2,int total_1,int total_2,int value)
+{
+    int j,i;
+    for(i=weight_1;i<=total_1;i++)
+    {
+        for(j=weight_2;j<=total_2;j++)
+        {
+            dp[i][j]=max(dp[i][j],dp[i-weight_1][j-weight_2]+value);
+        }
+    }
+}
+
+
+void mutiPack(int dp[][P+1],int weight_1,int weight_2,int total_1,int total_2,int amount,int value)
+{
+    if(amount*weight_1>total_1&&amount*weight_2>total_2)
+    {
+        completePack(dp,weight_1,weight_2,total_1,total_2,value);
+    }
+    else
+    {
+        int k=1;
+        while(amount-k>=0)
+        {
+            ZeroOnePack(dp,k*weight_1,k*weight_2,total_1,total_2,k*value);
+            amount-=k;
+            k*=2;
+        }
+        ZeroOnePack(dp,amount*weight_1,amount*weight_2,total_1,total_2,amount*value);
+    }
+}
+
+
+int main()
+{
+    int n,P,R;
+    cin>>n>>P>>R;
+
+    int i;
+
+    int p,r,num,val;
+    for(i=0;i<n;i++)
+    {
+        cin>>p>>r>>num>>val;
+        pg[i]=p;
+        rune[i]=r;
+        s[i]=num;
+        v[i]=val;
+    }
+
+
+    for(i=0;i<n;i++)
+    {
+        if(s[i]==1)//01 背包
+        {
+            ZeroOnePack(dp,pg[i],rune[i],P,R,v[i]);
+        }
+        else if(s[i]==0)// 完全背包
+        {
+            completePack(dp,pg[i],rune[i],P,R,v[i]);
+        }
+        else //多重背包
+        {
+            mutiPack(dp,pg[i],rune[i],P,R,s[i],v[i]);
+        }
+    }
+
+    cout<<dp[P][R]<<endl;
+
+    return 0;
+}
+
+
+//洛谷P1060
+/*01背包题，唯一不同的是价值变成了v*p
+代码如下*/
+#include<bits/stdc++.h>
+using namespace std;
+int n,m,dp[30005],vol[30],imp[30];
+int main()
+{
+	scanf("%d%d",&n,&m);
+	for(int i=1;i<=m;i++)
+	{
+		scanf("%d%d",&vol[i],&imp[i]);
+		imp[i]*=vol[i];      // 唯一不同
+	}	
+	for(int i=1;i<=m;i++)
+		for(int j=n;j>=vol[i];j--)
+			dp[j]=max(dp[j],dp[j-vol[i]]+imp[i]);
+	printf("%d",dp[n]);
+	return 0;
+}
+
+//洛谷P1049
+/*01背包问题，价值等于物品体积*/
+
+
+//洛谷P1507
+/*本题为二维费用01背包问题，实现基本类似一维费用
+代码如下*/
+#include<bits/stdc++.h>
+using namespace std;
+int h, t, n, dp[405][405], vol[55], mas[55], cal[55];
+int main()
+{
+	scanf("%d%d%d", &h, &t, &n);
+	for (int i = 1; i <= n; i++)
+		scanf("%d%d%d", &vol[i], &mas[i], &cal[i]);
+	for (int i = 1; i <= n; i++)
+		for (int j = h; j >= vol[i]; j--)
+			for (int k = t; k >= mas[i]; k--)
+				dp[j][k] = max(dp[j][k], dp[j - vol[i]][k - mas[i]] + cal[i]);
+	printf("%d", dp[h][t]);
+	return 0;
+}
+
